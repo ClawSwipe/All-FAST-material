@@ -1,0 +1,172 @@
+Q2)
+1:
+select sname from student S
+inner join enrolled E on s.snum = e.snum
+inner join class C on c.cname = e.cname
+inner join faculty F on c.fid = f.fid
+where s.lvl = 'JR' and F.fname = 'I.Teach';
+
+2:
+select max(age) from student S
+inner join enrolled E on s.snum = e.snum
+inner join class C on c.cname = e.cname
+inner join faculty F on c.fid = f.fid
+where s.major ='History' or f.fname = 'I.Teach'
+
+3:
+select distinct(cname) from class C 
+where room = 'R128' 
+or (select count(*) from enrolled E where e.cname = c.cname) > 5;
+
+4:
+select s.sname from student S 
+inner join enrolled E on s.snum = e.snum
+inner join enrolled Etwo on s.snum = etwo.snum
+inner join class C on c.cname = e.cname
+inner join class Ctwo on ctwo.cname = etwo.cname
+where c.cname != ctwo.cname and c.room = ctwo.room;
+ 
+
+5:
+select fname from faculty F where f.fid in (select c.fid from class C where c.room is not null);
+
+
+6:
+select distinct f.fname from faculty F 
+inner join class c on f.fid = c.fid
+inner join enrolled e on e.cname = c.cname
+where f.fid in (select f.fid from class c where c.cname = e.cname)
+group by f.fname having count (c.cname) < 5;
+
+
+7:
+select lvl, avg(age) as "Average Age" from student group by lvl
+
+
+8:
+select lvl, avg(age) as "Average Age" from student where lvl != 'JR' group by lvl
+
+
+9:
+select f.fname, count(c.cname) as "Number of Classes" from faculty f
+inner join class c on f.fid = c.fid
+where c.room = 'R128'
+group by f.fname;
+
+10:
+select distinct s.sname from enrolled e inner join student s on e.snum=s.snum 
+group by e.snum, s.sname 
+order by count(*) desc limit 1
+
+
+11:
+select distinct s.sname from student s where s.snum not in (select e.snum from enrolled e);
+
+12:
+select  s.age, s.lvl,  count(s.lvl) from student s group by s.age,s.lvl 
+having count(s.lvl) in (select max(count(s2.lvl)) from student s2 where (s2.age = s.age) group by s2.lvl, s2.age) order by count(s.lvl) desc;
+
+
+
+Q3):
+1:
+ select aname from aircraft a
+inner join certified c on a.aid = c.aid
+inner join emp e on c.eid = e.eid
+where e.salary > 80000;
+
+
+2:
+select e.eid, max(a.cruisingrange) as "MAX" from emp e
+inner join certified c on e.eid = c.eid
+inner join aircraft a on c.aid = a.aid
+ where (select count(c.eid) from certified c) > 3 group by e.eid;
+
+
+3:
+ select e.ename from emp e 
+ where salary < (select min(f.price) from flights f 
+ where frm = 'Los Angeles' and too = 'Honolulu' group by f.price);
+
+4:
+ select distinct e.ename from emp e 
+ inner join certified c on e.eid = c.eid
+ inner join aircraft a on c.aid=a.aid
+ where a.aname like '%Boeing%'
+
+5: (added a column aid in Flights table as i couldnt find any other way to link them)
+ select a.aid from aircraft a 
+where a.aid in 
+(select  f.aid from flights f where f.frm = 'Los Angeles' and f.too = 'Chicago');
+
+
+6:
+ select f.frm, f.too from flights f 
+ inner join certified c on c.aid = f.aid
+ inner join emp e on e.eid = c.eid
+ where e.salary >100000 and e.eid in c.eid;
+
+7:
+select f.departs from flights f 
+where (f.frm = 'Madison' and f.too = 'New York' and f.arrives <= '6:00 PM');
+
+8:
+select avg(e.salary) as "AVG of all", avg(e2.salary)as "pilots", (avg(e.salary) - avg(e2.salary)) as "difference"
+from emp e
+inner join emp e2 on e.eid = e2.eid
+where e2.eid in (select c.eid from certified c);
+
+9:
+select e.ename, e.salary from emp e 
+where e.salary > 
+( select avg(e2.salary) from emp e2 where e2.eid in (select c.eid from certified c));
+
+
+10:
+select e.ename from emp e 
+inner join certified c on c.eid = e.eid
+inner join aircraft a on c.aid = a.aid
+where a.cruisingrange > 1000;
+
+
+11:
+select e.ename from emp e
+inner join certified c on e.eid = c.eid
+inner join aircraft a on c.aid = a.aid
+where e.eid in c.eid
+group by e.ename
+having  count(a.aid) = (select a2.aid from aircraft a2 where a2.cruisingrange >1000) and count(a.aid)>=2;
+
+12:
+select e.ename from emp e
+inner join certified c on e.eid = c.eid
+inner join aircraft a on c.aid = a.aid
+where a.aname like '%Boeing%' and e.eid in c.eid and a.cruisingrange > 1000
+
+
+
+Q4)
+
+1:
+alter table emp add constraint chk_sal check(salary>=10000);
+
+
+2:
+alter table dept
+add constraint check_age
+check(managerid is null or managerid = (select e.eid from emp e where e.age>30));
+
+
+3:
+create assertion assert_age as check (
+    select emp.age from emp, dept where (emp.eid = dept.managerid and emp.age>30) 
+    );
+
+assertions can include one or multiple tables, while constraints only apply to one single row only
+
+
+4:
+delete from emp
+where emp.eid in (select works.eid from works, dept, emp e 
+where works.did = dept.did and dept.managerid = e.eid and emp.salary >e.salary);
+

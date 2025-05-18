@@ -1,0 +1,356 @@
+============================QUESTION=====================================================
+Let`s consider an example of subnetting for ABC Company. There are 3 departments i.e. Finance, HR and
+Development.
+You have to perform subnetting for the allocation of the given requirement:
+The network address for the given scenario is 200.16.100.0/24. Only show calculation.
+120 PCs for Development:
+200.16.100.0/25
+Borrow bits = 1 (25)
+No of subnets = 2^1 = 2
+No of available hosts = 2^7 = 128
+No of usable host = 128 – 2 = 126
+Networks:
+0...126...127
+128...126....255
+
+35 PCs for Finance:
+200.16.100.0/26
+Borrow bits = 2 (25 and 26)
+No of subnets = 2^2 = 4
+No of available hosts = 2^6 = 64
+No of usable host = 62 – 2 = 62
+Networks:
+0...62...63
+64...62....127
+128...62...191
+192...62...255
+
+10 PCs for HR:
+200.16.100.0/28
+
+Borrow bits = 4 (25 26 2728
+No of subnets = 2^4 = 16
+No of available hosts = 2^4 = 16
+No of usable host = 16 – 2 = 14
+Networks:
+0...14...15
+16...14...31
+32...14...47
+48...14...63
+64...14...79
+80...14...95
+96...14...111
+112...14...127
+128...14...143
+144...14...159
+160...14...175
+176...14...191
+192...14...207
+208...14...223
+224...14...239
+240...14...255
+=========================================================VLAN=============================
+en
+config t
+vlan 10
+name CS
+vlan 20
+name se
+vlan 30 
+name ai
+int fa0/1 
+switchport mode access
+swticport access vlan 10
+int fa0/2 
+switchport mode access
+swticport access vlan 10
+int fa0/3 
+switchport mode access
+swticport access vlan 10
+int fa0/4 
+switchport mode access
+swticport access vlan 10
+int fa0/5
+switchport mode trunk
+
+en
+config t
+vlan 10
+name CS
+vlan 20
+name se
+vlan 30 
+name ai
+int fa0/1
+switchport mode trunk
+int fa0/2
+switchport mode trunk
+
+en
+config t
+vlan 10
+name CS
+vlan 20
+name se
+vlan 30 
+name ai
+int fa0/1
+switchport mode trunk
+int fa0/2
+switchport mode trunk
+int fa0/4
+switchport mode trunk
+int fa0/3
+switchport mode access
+switchport access vlan 20
+
+en
+config t
+vlan 10
+name CS
+vlan 20
+name se
+vlan 30 
+name ai
+int fa0/1
+switchport mode trunk
+int fa0/2
+switchport mode trunk
+
+en
+config t
+vlan 10
+name CS
+vlan 20
+name se
+vlan 30 
+name ai
+int fa0/1
+switchport mode trunk
+int fa0/2
+switchport mode access
+switchport acess vlan 30
+int fa0/3
+switchport mode access
+switchport acess vlan 30
+int fa0/4
+switchport mode access
+switchport acess vlan 30
+
+
+en
+config t
+int fa0/0.10
+encapsulation dot1q 10
+ip add 31.72.1.1 255.255.255.0
+int fa0/0.20
+encapsulation dot1q 20
+ip add 31.72.2.2 255.255.255.0
+int fa0/0.30
+encapsulation dot1q 30
+ip add 31.72.3.3 255.255.255.0
+
+
+
+=====================================8 DHCP
+config-if : ip dhcp pool cnlab
+network 10.0.0.1 255.0.0.0
+default-router 10.0.0.1
+
+=================================8 Telnet switch
+Telnet switch
+On the pc thats connected with blue to switch
+
+en
+config t
+hostname aliyan
+enable password aliyan
+line vty 0 15
+password aliyan
+transport input telnet
+login
+exit
+
+int vlan 1
+ip address 10.0.0.1 255.0.0.0
+no shutdown
+
+end
+
+
+=========================================8 TELNET ROUTER
+
+en 
+config t
+int vlan 1
+ip address 192.168.0.5 255.255.255.0
+no shutdown 
+exit
+
+enable password aliyan
+line vty 0 15
+password aliyan
+login 
+exit
+
+
+===========================================SSH
+en 
+config t
+interface vlan 1
+ip address (ip) (subnet)
+no shutdown 
+exit
+
+hostname aliyan
+ip domain name domain
+crypto key generate rsa
+ip ssh version 2
+line vty 0 15
+password aliyan
+transport input ssh
+login local
+exit
+
+enable password aliyan
+username aliyan secret aliyan
+exit
+
+testing: ssh -l aliyan (ipadd)
+
+
+=====================================10 - OSPF
+enable
+config t
+router ospf 1
+network 192.168.1.0 0.0.0.255 area 0
+network 10.0.0.0 0.255.255.255 area 0
+//same for all routers
+
+exit
+
+================================================11- VLAN
+vlan database
+vlan 2 name cs
+vlan 3 name se
+exit
+config t
+int f0/1
+switchport access vlan 2
+int f0/2 
+switchport access vlan 3
+exit
+sh vlan
+
+for trunking
+int f0/3
+switchport mode trunk
+
+========================================Intervlan
+same till switchport mode trunk
+Router:(dont assign ip before)
+en
+config t
+host intervlan
+int f0/0
+no shutdown
+int f0/0.1
+encapsulation dot1Q 2
+ip address 192.168.1.1 255.255.255.0 (left gateway)
+int f0/0.2
+encapsulation dot1Q 3
+ip address (right gateway)
+
+================================12- ACL
+en 
+config t
+enable password aliyan
+line vty 0 15
+password aliyan
+login 
+exit
+==========================================================
+router(config)# ip access-list standard TEL
+permit 192.168.0.2
+deny any
+exit
+interface gig0/0
+ip access-group TEL in
+
+For extended
+ip access-list extended web
+permit tcp 192.168.0.0 0.0.0.255 host 172.168.0.2 eq 80
+deny ip 192.168.0.0 0.0.0.255 host 172.168.0.2
+exit
+int gig0/0
+ip access-group web in
+
+
+===========================================Static NAT
+Router
+int fa0/0
+ip nat inside
+exit
+int s0/1/0
+ip nat outside
+exit
+ip nat inside source static 192.168.1.1 1.0.0.1
+IP ROUTE 0.0.0.0 0.0.0.0 S0/1/0
+ip nat inside source static 192.168.1.2 1.0.0.1
+IP ROUTE 0.0.0.0 0.0.0.0 S0/1/0
+SH IP NAT TR
+
+
+=========================================for dynamic
+same till inside outside
+access-list 1 permit 192.168.0.0 0.0.0.255
+ip nat pool MY_POOL 4.4.4.1 4.4.4.5 netmask 255.255.255.0
+ip nat inside source list 1 pool MY_POOL
+exit
+
+
+
+========================================rip check
+enable
+config t
+router rip
+network (ip you want to check like 49.0.0.0)
+passive-interface serial 0/0
+
+
+
+
+
+==================================
+=================================full telnet and ssh process================
+for telnet and ssh
+telnet using router:
+en
+config t
+int Gig 0/0
+ip address 
+no shut
+exit
+line vty 0 15
+password 
+login
+do wr
+enable password 
+telnet 192.168.2.1
+ssh:
+ hostname 21k4596
+ip domain-name lab
+username admin password abc123
+crypto key generate rsa
+set bits to 1024
+disable other remote terminal use only ssh:
+accessing remote terminal or router via ssh:
+disabling telnet by going in line vty 0 15:
+login local
+transport input ssh
+ ssh -l admin 192.168.3.1
+ used to enable ssh:
+ telnet 192.1
+
+
+
